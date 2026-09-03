@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
-# Specific base URL for quotes scraping
 BASE_URL = "https://quotes.toscrape.com"
 
 
@@ -50,14 +49,11 @@ def parse_single_page(
         text = element.find("span", class_="text").text.strip()
         author_name = element.find("small", class_="author").text.strip()
 
-        # Extract list of tags
         tag_elements = element.find_all("a", class_="tag")
         tags = [tag.text.strip() for tag in tag_elements]
 
-        # Initialize the target Dataclass instance
         quote_obj = Quote(text=text, author=author_name, tags=tags)
 
-        # Optional Task: Handle Author Biography with Caching
         author_link_element = element.find("a", string="(about)")
         bio = ""
 
@@ -65,11 +61,10 @@ def parse_single_page(
             rel_author_url = author_link_element["href"]
             abs_author_url = urllib.parse.urljoin(BASE_URL, rel_author_url)
 
-            # Pull from network or check memory cache
             if abs_author_url not in authors_cache:
                 print(f"Scraping bio for new author: {author_name}")
                 authors_cache[abs_author_url] = parse_author_bio(abs_author_url)
-                time.sleep(0.5)  # Respect server resource limits
+                time.sleep(0.5)
 
             bio = authors_cache[abs_author_url]
 
@@ -93,11 +88,9 @@ def main(output_csv_path: str) -> None:
         if not soup:
             break
 
-        # Process page content into Dataclasses
         records_from_page = parse_single_page(soup, authors_cache)
         all_records.extend(records_from_page)
 
-        # Look for the pagination anchor
         next_button = soup.find("li", class_="next")
         if next_button:
             next_page_url = next_button.find("a")["href"]
@@ -106,19 +99,15 @@ def main(output_csv_path: str) -> None:
         else:
             current_url = None
 
-    # Handle folder path validation
     dir_name = os.path.dirname(output_csv_path)
     if dir_name:
         os.makedirs(dir_name, exist_ok=True)
 
-    # Output execution results
     with open(output_csv_path, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        # Write CSV Headers
-        writer.writerow(["text", "author", "tags"])  # без author_bio
+        writer.writerow(["text", "author", "tags"])
 
         for quote_obj, bio in all_records:
-            # Flatten tag arrays cleanly using a semi-colon separator
             tags_serialized = str(quote_obj.tags)
             writer.writerow([quote_obj.text, quote_obj.author, tags_serialized])
 
