@@ -41,7 +41,7 @@ def parse_author_bio(author_url: str) -> str:
 def parse_single_page(
     soup: BeautifulSoup, authors_cache: dict
 ) -> list[tuple[Quote, str]]:
-    """Extract quote instances and return pairs of (Quote object, author_bio_text)."""
+    """Extract quote instances and return pairs of (Quote, author_bio)."""
     page_data = []
     quote_elements = soup.find_all("div", class_="quote")
 
@@ -63,7 +63,9 @@ def parse_single_page(
 
             if abs_author_url not in authors_cache:
                 print(f"Scraping bio for new author: {author_name}")
-                authors_cache[abs_author_url] = parse_author_bio(abs_author_url)
+                authors_cache[abs_author_url] = parse_author_bio(
+                    abs_author_url
+                )
                 time.sleep(0.5)
 
             bio = authors_cache[abs_author_url]
@@ -109,10 +111,17 @@ def main(output_csv_path: str) -> None:
 
         for quote_obj, bio in all_records:
             tags_serialized = str(quote_obj.tags)
-            writer.writerow([quote_obj.text, quote_obj.author, tags_serialized])
+            writer.writerow(
+                [
+                    quote_obj.text,
+                    quote_obj.author,
+                    tags_serialized
+                ]
+            )
 
     print(
-        f"Pipeline complete! {len(all_records)} instances written to: {output_csv_path}"
+        f"Pipeline complete! {len(all_records)} "
+        f"instances written to: {output_csv_path}"
     )
 
 
