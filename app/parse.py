@@ -115,14 +115,12 @@ def main(output_csv_path: str) -> None:
     with open(output_csv_path, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         # Write CSV Headers
-        writer.writerow(["text", "author", "tags", "author_bio"])
+        writer.writerow(["text", "author", "tags"])  # без author_bio
 
         for quote_obj, bio in all_records:
             # Flatten tag arrays cleanly using a semi-colon separator
-            tags_serialized = ";".join(quote_obj.tags)
-            writer.writerow(
-                [quote_obj.text, quote_obj.author, tags_serialized, bio]
-            )
+            tags_serialized = str(quote_obj.tags)
+            writer.writerow([quote_obj.text, quote_obj.author, tags_serialized])
 
     print(
         f"Pipeline complete! {len(all_records)} instances written to: {output_csv_path}"
